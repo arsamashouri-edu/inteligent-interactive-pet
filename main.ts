@@ -12,7 +12,8 @@ function CalcStatRates () {
     HappinessRate = Math.max(1 + Hunger / 75 + Age / 100 + Energy / 200, 0.75)
 }
 function Feed () {
-	
+    led.plot(4, TopFood)
+    TopFood += -1
 }
 function Timer (time: number, _function: string) {
     runningTime = control.millis()
@@ -38,6 +39,7 @@ function Timer (time: number, _function: string) {
     } else if (_function == "TopBarMode") {
         if (runningTime > time + LastTBM) {
             LastTBM = control.millis()
+            TopBarMode = !(TopBarMode)
         }
     } else if (_function == "BarFlash") {
         if (runningTime > time + LastBarFlash) {
@@ -48,6 +50,12 @@ function Timer (time: number, _function: string) {
             LastScore = control.millis()
         }
     }
+}
+function Eat () {
+    // ADD if hungry and lots of food eat all
+    TopFood += 1
+    led.unplot(0, TopFood)
+    Hunger += 15
 }
 function Poop () {
     led.plot(0, TopPoop)
@@ -73,7 +81,9 @@ let LastCleanPoop = 0
 let LastPoop = 0
 let runningTime = 0
 let total = 0
+let TopFood = 0
 let TopPoop = 0
+let TopBarMode = false
 let EnergyRate = 0
 let ThirstRate = 0
 let HungerRate = 0
@@ -98,21 +108,23 @@ HappinessRate = 1
 HungerRate = 1
 ThirstRate = 1
 EnergyRate = 1
-let TopBarMode = false
+TopBarMode = false
 TopPoop = 4
+TopFood = 4
 basic.forever(function () {
     Timer(3000, "Poop")
     Timer(2000, "CalcStats")
     if (TopBarMode) {
         Timer(500, "BarFlash")
-    } else {
-        if (input.buttonIsPressed(Button.AB)) {
-            Timer(500, "TopBarMode")
-        } else if (input.buttonIsPressed(Button.A)) {
-            Timer(500, "Feed")
-        } else if (input.buttonIsPressed(Button.B)) {
-            Timer(500, "CleanPoop")
-        }
+    } else if (input.buttonIsPressed(Button.AB)) {
+        Timer(500, "TopBarMode")
+    } else if (input.buttonIsPressed(Button.A)) {
+        Timer(500, "Feed")
+    } else if (input.buttonIsPressed(Button.B)) {
+        Timer(500, "CleanPoop")
+    }
+    if (Hunger < 75) {
+        Eat()
     }
     Timer(5000, "Score")
 })
