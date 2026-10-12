@@ -81,9 +81,13 @@ basic.forever(function () {
     Timer(3000, "Poop")
     Timer(2000, "CalcStats")
     if (TopBarMode) {
-    	
+        Timer(500, "BarFlash")
     } else {
-        if (input.buttonIsPressed(Button.B)) {
+        if (input.buttonIsPressed(Button.AB)) {
+            Timer(500, "TopBarMode")
+        } else if (input.buttonIsPressed(Button.A)) {
+            Timer(500, "Feed")
+        } else if (input.buttonIsPressed(Button.B)) {
             Timer(500, "CleanPoop")
         }
     }

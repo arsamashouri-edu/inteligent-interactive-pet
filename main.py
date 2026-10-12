@@ -27,8 +27,8 @@ def Timer(time: number, _function: str):
             CalcStats()
 def Poop():
     global TopPoop
-    TopPoop += -1
     led.plot(0, TopPoop)
+    TopPoop += -1
 def CalcStats():
     global Energy, Hunger, Thirst, Happiness
     CalcStatRates()
@@ -38,14 +38,14 @@ def CalcStats():
     Happiness += 0 - HappinessRate
 def CleanPoop():
     global TopPoop
-    led.unplot(0, TopPoop)
     TopPoop = min(TopPoop + 1, 4)
-TopPoop = 0
+    led.unplot(0, TopPoop)
 LastStats = 0
 LastCleanPoop = 0
 LastPoop = 0
 runningTime = 0
 total = 0
+TopPoop = 0
 EnergyRate = 0
 ThirstRate = 0
 HungerRate = 0
@@ -72,13 +72,14 @@ HungerRate = 1
 ThirstRate = 1
 EnergyRate = 1
 TopBarMode = False
+TopPoop = 4
 
 def on_forever():
-    Timer(30000, "Poop")
+    Timer(3000, "Poop")
     Timer(2000, "CalcStats")
     if TopBarMode:
         pass
     else:
         if input.button_is_pressed(Button.B):
-            pass
+            Timer(500, "CleanPoop")
 basic.forever(on_forever)
