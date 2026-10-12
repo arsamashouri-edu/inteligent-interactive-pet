@@ -92,18 +92,22 @@ let Age = 0
 let Energy = 0
 let Hunger = 0
 let Happiness = 0
+basic.showIcon(IconNames.SmallDiamond)
+music.setVolume(32)
 music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Entertainer), music.PlaybackMode.InBackground)
 game.setScore(0)
 Happiness = 100
 Hunger = 100
 Energy = 100
 let Thirst = 100
+basic.showIcon(IconNames.Diamond)
 let Aggression = CurveGenerator(1, 100)
 let Curiosity = CurveGenerator(1, 100)
 let Playfulness = CurveGenerator(1, 100)
 let Intelligence = CurveGenerator(1, 100)
 let Obedience = CurveGenerator(1, 100)
 Age = 0
+basic.showIcon(IconNames.Square)
 HappinessRate = 1
 HungerRate = 1
 ThirstRate = 1
@@ -111,6 +115,7 @@ EnergyRate = 1
 TopBarMode = false
 TopPoop = 4
 TopFood = 4
+basic.clearScreen()
 basic.forever(function () {
     Timer(3000, "Poop")
     Timer(2000, "CalcStats")
