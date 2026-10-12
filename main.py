@@ -1,3 +1,8 @@
+def PlotPet():
+    led.plot(PetX, PetY)
+    led.plot(PetX, PetY + 1)
+    led.plot(PetX + 1, PetY)
+    led.plot(PetX + 1, PetY + 1)
 def CalcScore():
     game.set_score(0)
 def CurveGenerator(minimum: number, maximum: number):
@@ -6,8 +11,6 @@ def CurveGenerator(minimum: number, maximum: number):
     for index in range(5):
         total += randint(minimum, maximum / 5)
     return total
-def Die(TopPoop: number, Hunger: number, Thirst: number, Energy: number, Happiness: number):
-    pass
 def CalcStatRates():
     global HungerRate, ThirstRate, EnergyRate, HappinessRate
     HungerRate = max(1 - Happiness2 / 200 + Age / 100 + Energy2 / 75, 0.75)
@@ -19,9 +22,18 @@ def Feed():
     led.plot(4, TopFood)
     TopFood += -1
 def Jump():
-    pass
+    global PetY
+    PetY = 2
+    PlotPet()
+    led.unplot(1, 4)
+    led.unplot(2, 4)
+    basic.pause(500)
+    PetY = 3
+    PlotPet()
+    led.unplot(1, 2)
+    led.unplot(2, 2)
 def Timer(time: number, _function: str):
-    global runningTime, LastPoop, LastCleanPoop, LastStats, LastFed, LastTBM, TopBarMode, LastBarFlash, LastScore, LastAge, Age
+    global runningTime, LastPoop, LastCleanPoop, LastStats, LastFed, LastTBM, TopBarMode, LastBarFlash, LastScore, LastAge, Age, LastJump, PetY
     runningTime = control.millis()
     if _function == "Poop":
         if runningTime > time + LastPoop:
@@ -54,14 +66,26 @@ def Timer(time: number, _function: str):
         if runningTime > time + LastAge:
             LastAge = control.millis()
             Age += 1
+    elif _function == "Jump":
+        if runningTime > time + LastJump:
+            LastJump = control.millis()
+            PetY = 2
+def Death(TopPoop: number, Hunger: number, Thirst: number, Energy: number, Happiness: number):
+    if TopPoop == 0 or (Hunger <= 0 or (Hunger <= 0 or (Hunger <= 0 or (Hunger <= 0 or Hunger <= 0)))):
+        music.stop_melody(MelodyStopOptions.ALL)
+        basic.clear_screen()
+        music._play_default_background(music.built_in_playable_melody(Melodies.WAWAWAWAA),
+            music.PlaybackMode.UNTIL_DONE)
+        basic.show_icon(IconNames.SKULL)
+        music._play_default_background(music.built_in_playable_melody(Melodies.FUNK),
+            music.PlaybackMode.LOOPING_IN_BACKGROUND)
+        game.game_over()
 def Eat():
     global TopFood, Hunger2
     # ADD if hungry and lots of food eat all
-    TopFood += 1
+    TopFood = min(TopFood + 1, 4)
     led.unplot(4, TopFood)
     Hunger2 += 15
-def Draw(Screen: List[any]):
-    pass
 def Poop():
     global TopPoop2
     led.plot(0, TopPoop2)
@@ -77,6 +101,7 @@ def CleanPoop():
     global TopPoop2
     TopPoop2 = min(TopPoop2 + 1, 4)
     led.unplot(0, TopPoop2)
+LastJump = 0
 LastAge = 0
 LastScore = 0
 LastBarFlash = 0
@@ -87,6 +112,8 @@ LastCleanPoop = 0
 LastPoop = 0
 runningTime = 0
 total = 0
+PetX = 0
+PetY = 0
 TopFood = 0
 TopPoop2 = 0
 TopBarMode = False
@@ -122,7 +149,11 @@ EnergyRate = 1
 TopBarMode = False
 TopPoop2 = 4
 TopFood = 4
+PetY = 3
+PetX = 1
 basic.clear_screen()
+music._play_default_background(music.built_in_playable_melody(Melodies.NYAN),
+    music.PlaybackMode.LOOPING_IN_BACKGROUND)
 
 def on_forever():
     Timer(CurveGenerator(2000, 5000), "Poop")
@@ -135,10 +166,12 @@ def on_forever():
         Timer(500, "Feed")
     elif input.button_is_pressed(Button.B):
         Timer(500, "CleanPoop")
-    elif input.is_gesture(Gesture.FREE_FALL):
+    elif input.is_gesture(Gesture.SHAKE):
         Jump()
     if Hunger2 < 75:
         Eat()
     Timer(5000, "Score")
     Timer(60000, "Age")
+    Death(TopPoop2, Hunger2, Thirst2, Energy2, Happiness2)
+    PlotPet()
 basic.forever(on_forever)

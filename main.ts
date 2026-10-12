@@ -1,3 +1,9 @@
+function PlotPet () {
+    led.plot(PetX, PetY)
+    led.plot(PetX, PetY + 1)
+    led.plot(PetX + 1, PetY)
+    led.plot(PetX + 1, PetY + 1)
+}
 function CalcScore () {
     game.setScore(0)
 }
@@ -9,17 +15,25 @@ function CurveGenerator (minimum: number, maximum: number) {
     return total
 }
 function CalcStatRates () {
-    HungerRate = Math.max(1 - Happiness2 / 200 + Age / 100 + Energy2 / 75, 0.75)
-    ThirstRate = Math.max(1 + Age / 100 + Energy2 / 75, 0.75)
-    EnergyRate = Math.max(1 + Happiness2 / 75 + Age / 100 - Hunger2 / 75, 0.75)
-    HappinessRate = Math.max(1 + Hunger2 / 75 + Age / 100 + Energy2 / 200, 0.75)
+    HungerRate = Math.max(1 - Hapiness / 200 + Age / 100 + Energy / 75, 0.75)
+    ThirstRate = Math.max(1 + Age / 100 + Energy / 75, 0.75)
+    EnergyRate = Math.max(1 + Hapiness / 75 + Age / 100 - Hunger / 75, 0.75)
+    HappinessRate = Math.max(1 + Hunger / 75 + Age / 100 + Energy / 200, 0.75)
 }
 function Feed () {
     led.plot(4, TopFood)
     TopFood += -1
 }
 function Jump () {
-	
+    PetY = 2
+    PlotPet()
+    led.unplot(1, 4)
+    led.unplot(2, 4)
+    basic.pause(500)
+    PetY = 3
+    PlotPet()
+    led.unplot(1, 2)
+    led.unplot(2, 2)
 }
 function Timer (time: number, _function: string) {
     runningTime = control.millis()
@@ -62,26 +76,31 @@ function Timer (time: number, _function: string) {
             LastAge = control.millis()
             Age += 1
         }
+    } else if (_function == "Jump") {
+        if (runningTime > time + LastJump) {
+            LastJump = control.millis()
+            PetY = 2
+        }
     }
 }
 function Death (TopPoop: number, Hunger: number, Thirst: number, Energy: number, Happiness: number) {
-    if (TopPoop == 2 || (Hunger <= 0 || (Hunger <= 0 || (Hunger <= 0 || (Hunger <= 0 || Hunger <= 0))))) {
+    if (TopPoop == 0 || (Hunger <= 0 || (Hunger <= 0 || (Hunger <= 0 || (Hunger <= 0 || Hunger <= 0))))) {
+        music.stopMelody(MelodyStopOptions.All)
         basic.clearScreen()
-        basic.showIcon(IconNames.Skull)
         music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Wawawawaa), music.PlaybackMode.UntilDone)
-        basic.showString("" + (game.score()))
-        music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Dadadadum), music.PlaybackMode.InBackground)
+        basic.showIcon(IconNames.Skull)
+        music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Funk), music.PlaybackMode.LoopingInBackground)
         game.gameOver()
     }
 }
 function Eat () {
     // ADD if hungry and lots of food eat all
-    TopFood += 1
-    led.unplot(4, TopFood)
-    Hunger2 += 15
-}
-function Draw (Screen: any[]) {
-	
+    TopFood = TopFood + 1
+    if (TopFood < 5) {
+        led.unplot(4, TopFood)
+        Hunger += 15
+        Thirst += 5
+    }
 }
 function Poop () {
     led.plot(0, TopPoop2)
@@ -89,15 +108,16 @@ function Poop () {
 }
 function CalcStats () {
     CalcStatRates()
-    Energy2 += 0 - EnergyRate
-    Hunger2 += 0 - HungerRate
-    Thirst2 += 0 - ThirstRate
-    Happiness2 += 0 - HappinessRate
+    Energy += 0 - EnergyRate
+    Hunger += 0 - HungerRate
+    Thirst += 0 - ThirstRate
+    Hapiness += 0 - HappinessRate
 }
 function CleanPoop () {
     TopPoop2 = Math.min(TopPoop2 + 1, 4)
     led.unplot(0, TopPoop2)
 }
+let LastJump = 0
 let LastAge = 0
 let LastScore = 0
 let LastBarFlash = 0
@@ -108,6 +128,8 @@ let LastCleanPoop = 0
 let LastPoop = 0
 let runningTime = 0
 let total = 0
+let PetX = 0
+let PetY = 0
 let TopFood = 0
 let TopPoop2 = 0
 let TopBarMode = false
@@ -116,17 +138,17 @@ let ThirstRate = 0
 let HungerRate = 0
 let HappinessRate = 0
 let Age = 0
-let Energy2 = 0
-let Hunger2 = 0
-let Happiness2 = 0
+let Energy = 0
+let Hunger = 0
+let Hapiness = 0
 basic.showIcon(IconNames.SmallDiamond)
-music.setVolume(127)
+music.setVolume(32)
 music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Entertainer), music.PlaybackMode.InBackground)
 game.setScore(0)
-Happiness2 = 100
-Hunger2 = 100
-Energy2 = 100
-let Thirst2 = 100
+Hapiness = 100
+Hunger = 100
+Energy = 100
+let Thirst = 100
 basic.showIcon(IconNames.Diamond)
 let Aggression = CurveGenerator(1, 100)
 let Curiosity = CurveGenerator(1, 100)
@@ -142,7 +164,10 @@ EnergyRate = 1
 TopBarMode = false
 TopPoop2 = 4
 TopFood = 4
+PetY = 3
+PetX = 1
 basic.clearScreen()
+music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Nyan), music.PlaybackMode.LoopingInBackground)
 basic.forever(function () {
     Timer(CurveGenerator(2000, 5000), "Poop")
     Timer(2000, "CalcStats")
@@ -154,13 +179,14 @@ basic.forever(function () {
         Timer(500, "Feed")
     } else if (input.buttonIsPressed(Button.B)) {
         Timer(500, "CleanPoop")
-    } else if (input.isGesture(Gesture.FreeFall)) {
+    } else if (input.isGesture(Gesture.Shake)) {
         Jump()
     }
-    if (Hunger2 < 75) {
+    if (Hunger < 75) {
         Eat()
     }
     Timer(5000, "Score")
     Timer(60000, "Age")
-    Death(TopPoop2, Hunger2, Thirst2, Energy2, Happiness2)
+    Death(TopPoop2, Hunger, Thirst, Energy, Hapiness)
+    PlotPet()
 })
