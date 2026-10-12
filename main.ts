@@ -35,6 +35,7 @@ function Timer (time: number, _function: string) {
     } else if (_function == "Feed") {
         if (runningTime > time + LastFed) {
             LastFed = control.millis()
+            Feed()
         }
     } else if (_function == "TopBarMode") {
         if (runningTime > time + LastTBM) {
@@ -54,7 +55,7 @@ function Timer (time: number, _function: string) {
 function Eat () {
     // ADD if hungry and lots of food eat all
     TopFood += 1
-    led.unplot(0, TopFood)
+    led.unplot(4, TopFood)
     Hunger += 15
 }
 function Poop () {
@@ -117,16 +118,19 @@ TopPoop = 4
 TopFood = 4
 basic.clearScreen()
 basic.forever(function () {
-    Timer(3000, "Poop")
+    let Hunger2: number;
+Timer(3000, "Poop")
     Timer(2000, "CalcStats")
     if (TopBarMode) {
         Timer(500, "BarFlash")
-    } else if (input.buttonIsPressed(Button.AB)) {
-        Timer(500, "TopBarMode")
-    } else if (input.buttonIsPressed(Button.A)) {
-        Timer(500, "Feed")
-    } else if (input.buttonIsPressed(Button.B)) {
-        Timer(500, "CleanPoop")
+    } else {
+        if (input.buttonIsPressed(Button.AB)) {
+            Timer(500, "TopBarMode")
+        } else if (input.buttonIsPressed(Button.A)) {
+            Timer(500, "Feed")
+        } else if (input.buttonIsPressed(Button.B)) {
+            Timer(500, "CleanPoop")
+        }
     }
     if (Hunger < 75) {
         Eat()

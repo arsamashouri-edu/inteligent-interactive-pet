@@ -42,8 +42,9 @@ def Timer(time: number, _function: str):
     elif _function == "Score":
         if runningTime > time + LastScore:
             LastScore = control.millis()
-def Eat(): # ADD if hungry and lots of food eat all
+def Eat():
     global TopFood, Hunger
+    # ADD if hungry and lots of food eat all
     TopFood += 1
     led.unplot(0, TopFood)
     Hunger += 15
@@ -82,6 +83,8 @@ Age = 0
 Energy = 0
 Hunger = 0
 Happiness = 0
+basic.show_icon(IconNames.SMALL_DIAMOND)
+music.set_volume(32)
 music._play_default_background(music.built_in_playable_melody(Melodies.ENTERTAINER),
     music.PlaybackMode.IN_BACKGROUND)
 game.set_score(0)
@@ -89,12 +92,14 @@ Happiness = 100
 Hunger = 100
 Energy = 100
 Thirst = 100
+basic.show_icon(IconNames.DIAMOND)
 Aggression = CurveGenerator(1, 100)
 Curiosity = CurveGenerator(1, 100)
 Playfulness = CurveGenerator(1, 100)
 Intelligence = CurveGenerator(1, 100)
 Obedience = CurveGenerator(1, 100)
 Age = 0
+basic.show_icon(IconNames.SQUARE)
 HappinessRate = 1
 HungerRate = 1
 ThirstRate = 1
@@ -102,6 +107,7 @@ EnergyRate = 1
 TopBarMode = False
 TopPoop = 4
 TopFood = 4
+basic.clear_screen()
 
 def on_forever():
     Timer(3000, "Poop")
@@ -109,13 +115,14 @@ def on_forever():
     if TopBarMode:
         Timer(500, "BarFlash")
     else:
+        Hunger2 = Hunger2 + 1
         if input.button_is_pressed(Button.AB):
             Timer(500, "TopBarMode")
         elif input.button_is_pressed(Button.A):
             Timer(500, "Feed")
         elif input.button_is_pressed(Button.B):
             Timer(500, "CleanPoop")
-    if Hunger < 75:
+    if Hunger2 < 75:
         Eat()
     Timer(5000, "Score")
 basic.forever(on_forever)
