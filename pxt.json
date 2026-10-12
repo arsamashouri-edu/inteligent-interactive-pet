@@ -1,0 +1,28 @@
+{
+    "name": "Inteligent Interactive Pet",
+    "description": "",
+    "dependencies": {
+        "core": "*",
+        "microphone": "*",
+        "my-controller": "github:aorczyk/my-controller#v2.2.7",
+        "datalogger": "*",
+        "bluetooth": "*"
+    },
+    "files": [
+        "main.blocks",
+        "main.ts",
+        "README.md",
+        "main.py"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "targetVersions": {
+        "target": "9.0.12",
+        "targetId": "microbit"
+    },
+    "supportedTargets": [
+        "microbit"
+    ],
+    "preferredEditor": "blocksprj"
+}
