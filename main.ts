@@ -11,6 +11,9 @@ function CalcStatRates () {
     EnergyRate = Math.max(1 + Happiness / 75 + Age / 100 - Hunger / 75, 0.75)
     HappinessRate = Math.max(1 + Hunger / 75 + Age / 100 + Energy / 200, 0.75)
 }
+function Feed () {
+	
+}
 function Timer (time: number, _function: string) {
     runningTime = control.millis()
     if (_function == "Poop") {
@@ -27,6 +30,22 @@ function Timer (time: number, _function: string) {
         if (runningTime > time + LastStats) {
             LastStats = control.millis()
             CalcStats()
+        }
+    } else if (_function == "Feed") {
+        if (runningTime > time + LastFed) {
+            LastFed = control.millis()
+        }
+    } else if (_function == "TopBarMode") {
+        if (runningTime > time + LastTBM) {
+            LastTBM = control.millis()
+        }
+    } else if (_function == "BarFlash") {
+        if (runningTime > time + LastBarFlash) {
+            LastBarFlash = control.millis()
+        }
+    } else if (_function == "Score") {
+        if (runningTime > time + LastScore) {
+            LastScore = control.millis()
         }
     }
 }
@@ -45,6 +64,10 @@ function CleanPoop () {
     TopPoop = Math.min(TopPoop + 1, 4)
     led.unplot(0, TopPoop)
 }
+let LastScore = 0
+let LastBarFlash = 0
+let LastTBM = 0
+let LastFed = 0
 let LastStats = 0
 let LastCleanPoop = 0
 let LastPoop = 0
@@ -91,4 +114,5 @@ basic.forever(function () {
             Timer(500, "CleanPoop")
         }
     }
+    Timer(5000, "Score")
 })
