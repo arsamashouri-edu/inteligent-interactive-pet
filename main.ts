@@ -1,41 +1,46 @@
 function cap(value: number, minimum: number, maximum: number): number {
+    /** Ensures that a given value is constrained within a specified minimum and maximum range. */
     return Math.max(minimum, Math.min(maximum, value))
 }
 
 function plot_pet() {
     let y: number;
+    /** Plots the pet on the LED display based on its current position (pet_x, pet_y). */
     
-    x = pet_old_x
-    while (x < pet_old_x + 2) {
+    i = pet_old_x
+    while (i < pet_old_x + 2) {
         y = pet_old_y
         while (y < pet_old_y + 2) {
-            led.unplot(cap(x, 0, 4), cap(y, 0, 4))
+            led.unplot(cap(i, 0, 4), cap(y, 0, 4))
             y += 1
         }
-        x += 1
+        i += 1
     }
-    x = pet_x
-    while (x < pet_x + 2) {
+    i = pet_x
+    while (i < pet_x + 2) {
         y = pet_y
         while (y < pet_y + 2) {
-            led.plot(cap(x, 0, 4), cap(y, 0, 4))
+            led.plot(cap(i, 0, 4), cap(y, 0, 4))
             y += 1
         }
-        x += 1
+        i += 1
     }
     pet_old_y = pet_y
     pet_old_x = pet_x
 }
 
 function personality_use_calc(curve: number, luckModifier: number): number {
-    return curve_generator(curve + randint(0, luckModifier * player_luck), 100)
+    /** Generates a random value based on a curve and a luck modifier, which is influenced by the player's luck. */
+    return curve_generator(curve + randint(0, luckModifier * PLAYER_LUCK), 100)
 }
 
 function calc_score() {
+    /** Calculates and updates the game score based on the pet's most important factors of life. */
     game.setScore(game.score() + (age * 10 + happiness / 10))
 }
 
 function curve_generator(minimum2: number, maximum2: number): number {
+    /** Generates a random value that simulates a bell curve distribution by summing multiple random values. */
     
     //  This function acts as a simple replacement for the bell curve since The
     //  bell curve takes too much computational work, and gives near same results.
@@ -47,6 +52,7 @@ function curve_generator(minimum2: number, maximum2: number): number {
 }
 
 function calc_stat_rates() {
+    /** Calculates the rates at which the pet's stats change over time. */
     
     hunger_rate = cap(1 - happiness / 200 + age / 100 + energy / 75 - INTELIGENCE / 100, 0.75, 3)
     energy_rate = cap(1 + happiness / 75 + age / 100 - hunger / 75 + INTELIGENCE / 100, 0.75, 3)
@@ -54,22 +60,25 @@ function calc_stat_rates() {
 }
 
 function feed() {
+    /** Feeds the pet, increasing its food count. */
     
     led.plot(4, 4 - food_count)
     food_count = cap(food_count + 1, 0, 4)
 }
 
 function sleep() {
+    /** Puts the pet to sleep. */
     
     pet_y = 4
+    //  This creates a sence of sleeping because the pet looks shorter on screen
     plot_pet()
     sleep_time = control.millis()
     sleep_stage = 0
     sleeping = true
 }
 
-//  This creates a sence of sleeping because the pet looks shorter on screen
 function jump() {
+    /** Makes the pet jump if it is playful and has enough energy. */
     
     if (personality_use_calc(20, 0.05) < PLAYFULNESS && energy > 50) {
         pet_y = 2
@@ -84,6 +93,7 @@ function jump() {
 }
 
 function cap_stats() {
+    /** Caps the pet's stats (happiness, energy, hunger) to ensure they remain within the range of 0 to 100. */
     
     happiness = cap(happiness, 0, 100)
     energy = cap(energy, 0, 100)
@@ -94,6 +104,11 @@ function cap_stats() {
 //  only 1 clock to check for several events that happen
 //  throughout the game
 function timer(time: number, _function: string) {
+    /** 
+    Game's main timer function, which checks if a specified amount of time has passed since the last occurrence of a given event.
+    If the time has passed, it triggers the corresponding function (e.g., pooping, feeding, jumping, etc.) and updates the last occurrence time for that event.
+    
+ */
     
     current_time = control.millis()
     if (_function == "Poop") {
@@ -165,8 +180,12 @@ function timer(time: number, _function: string) {
 }
 
 function calc_death() {
-    //  Instead of a normal calc_death value, this function checks every stat needed for survival
-    if (poop_count >= 3 || (hunger <= 0 || energy <= 0 || happiness <= 0 || age >= life_expectency)) {
+    /** 
+    Checks the pet's stats to determine if it has died. If any of the critical stats
+    (poop count, hunger, energy, happiness, or age) reach a fatal level, the game ends.
+    
+ */
+    if (poop_count >= 3 || (hunger <= 0 || energy <= 0 || happiness <= 0 || age >= LIFE_EXPECTENCY)) {
         music.stopMelody(MelodyStopOptions.All)
         basic.clearScreen()
         music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Wawawawaa), music.PlaybackMode.UntilDone)
@@ -178,6 +197,11 @@ function calc_death() {
 }
 
 function eat() {
+    /** 
+    Allows the pet to eat food if it is hungry and there is food available.
+    Eating increases the pet's hunger stat and decreases the food count.
+    
+ */
     
     if (food_count >= 1) {
         led.unplot(4, 4 - food_count)
@@ -193,12 +217,14 @@ function eat() {
 }
 
 function poop() {
+    /** Increases the pet's poop count and updates the LED display to reflect the new poop count. */
     
     led.plot(0, 4 - poop_count)
     poop_count = cap(poop_count + 1, 0, 4)
 }
 
 function calc_stats() {
+    /** Calculates the pet's stats (happiness, energy, hunger) based on their respective rates */
     
     calc_stat_rates()
     happiness += 0 - happiness_rate
@@ -207,6 +233,10 @@ function calc_stats() {
 }
 
 function clean_poop() {
+    /** 
+    Cleans the pet's poop. If the pet is too aggressive, it may refuse to clean the poop, and the poop count will remain the same.
+    If the pet is not aggressive and there is poop to clean, the poop count will always decrease
+ */
     
     if (personality_use_calc(35, 0.05) > AGGRESSION && poop_count >= 1) {
         poop_count += -1
@@ -215,9 +245,30 @@ function clean_poop() {
     
 }
 
+music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Entertainer), music.PlaybackMode.InBackground)
+//  Clock initialization
+let FRAME_INTERVAL = 50
 let frame_start = 0
 let elapsed = 0
+//  Personality initialization
+let LIFE_EXPECTENCY = curve_generator(10, 30)
+let PLAYER_LUCK = curve_generator(0, 100)
+let AGGRESSION = curve_generator(40, 100)
+let CURIOSITY = curve_generator(40, 100)
+let PLAYFULNESS = curve_generator(40, 100)
+let INTELIGENCE = curve_generator(40, 100)
+let OBEDIENCE = curve_generator(40, 100)
+//  Stats initialization
+let happiness = 100
+let hunger = 100
+let energy = 100
+let happiness_rate = 1
+let hunger_rate = 1
+let energy_rate = 1
+//  Game initialization
+let poop_timer = curve_generator(5000, 30000)
 let poop_count = 0
+let current_time = 0
 let last_jumped = 0
 let last_aged = 0
 let last_scored = 0
@@ -225,7 +276,10 @@ let last_fed = 0
 let last_stats = 0
 let last_clean_poop = 0
 let last_pooped = 0
-let current_time = 0
+let pet_x = 1
+let pet_y = 3
+let pet_old_x = 1
+let pet_old_y = 3
 let jump_start = 0
 let jumping = false
 let sleeping = false
@@ -234,49 +288,27 @@ let sleep_time = 0
 let food_count = 0
 let total = 0
 let age = 0
-let pet_old_y = 0
-let pet_old_x = 0
-let x = 0
-let player_luck = 0
-let life_expectency = 0
-let pet_x = 0
-let pet_y = 0
-let energy_rate = 0
-let hunger_rate = 0
-let happiness_rate = 0
-let energy = 0
-let hunger = 0
-let happiness = 0
-basic.showIcon(IconNames.SmallDiamond)
+let i = 0
+//  Startup sequence
 music.setVolume(32)
-music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Entertainer), music.PlaybackMode.InBackground)
-let FRAME_INTERVAL = 50
-happiness = 100
-hunger = 100
-energy = 100
-let AGGRESSION = curve_generator(40, 100)
-let CURIOSITY = curve_generator(40, 100)
-let PLAYFULNESS = curve_generator(40, 100)
-let INTELIGENCE = curve_generator(40, 100)
-let OBEDIENCE = curve_generator(40, 100)
-let poop_timer = curve_generator(5000, 30000)
-happiness_rate = 1
-hunger_rate = 1
-energy_rate = 1
-pet_y = 3
-pet_x = 1
-life_expectency = curve_generator(10, 30)
-player_luck = curve_generator(0, 100)
-let timerrr = control.millis()
 game.setScore(0)
+basic.showIcon(IconNames.SmallDiamond)
 basic.showIcon(IconNames.Diamond)
 basic.showIcon(IconNames.Square)
 basic.clearScreen()
 music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Nyan), music.PlaybackMode.LoopingInBackground)
-feed()
-feed()
 plot_pet()
+//  Player gets 2 food at the start of the game
+feed()
+feed()
 basic.forever(function on_forever() {
+    /** 
+    Main game loop, this function is called every FRAME_INTERVAL milliseconds.
+    It handles the timing of various events in the game, such as:
+    pooping, feeding, jumping, and sleeping.
+    It also updates the pet's stats and checks for death conditions.
+    
+ */
     
     timer(poop_timer, "Poop")
     timer(2000, "calc_stats")
@@ -310,8 +342,13 @@ basic.forever(function on_forever() {
         basic.pause(FRAME_INTERVAL - elapsed)
     }
     
-    //  frame_start is calculated at the end of the frame
-    //  This is done because the microbit does other functions
-    //  Between the forever loops
+    /** 
+    frame_start is calculated at the end of the frame to ensure that
+    the timing of events is accurate. This accounts for any delays
+    caused by other functions or processes running on the micro:bit,
+    ensuring that the game loop maintains a consistent frame rate
+    and that events occur at the intended intervals.
+    
+ */
     frame_start = control.millis()
 })

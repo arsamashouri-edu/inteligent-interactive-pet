@@ -1,28 +1,47 @@
 def cap(value: number, minimum: number, maximum: number):
+    """
+    Ensures that a given value is constrained within a specified minimum and maximum range.
+    """
     return max(minimum, min(maximum, value))
+
 def plot_pet():
-    global x, pet_old_y, pet_old_x
-    x = pet_old_x
-    while x < pet_old_x + 2:
+    """
+    Plots the pet on the LED display based on its current position (pet_x, pet_y).
+    """
+    global i, pet_old_y, pet_old_x
+    i = pet_old_x
+    while i < pet_old_x + 2:
         y = pet_old_y
         while y < pet_old_y + 2:
-            led.unplot(cap(x, 0, 4), cap(y, 0, 4))
+            led.unplot(cap(i, 0, 4), cap(y, 0, 4))
             y += 1
-        x += 1
-    x = pet_x
-    while x < pet_x + 2:
+        i += 1
+    i = pet_x
+    while i < pet_x + 2:
         y = pet_y
         while y < pet_y + 2:
-            led.plot(cap(x, 0, 4), cap(y, 0, 4))
+            led.plot(cap(i, 0, 4), cap(y, 0, 4))
             y += 1
-        x += 1
+        i += 1
     pet_old_y = pet_y
     pet_old_x = pet_x
+
 def personality_use_calc(curve: number, luckModifier: number):
-    return curve_generator(curve + randint(0, luckModifier * player_luck), 100)
+    """
+    Generates a random value based on a curve and a luck modifier, which is influenced by the player's luck.
+    """
+    return curve_generator(curve + randint(0, luckModifier * PLAYER_LUCK), 100)
+
 def calc_score():
+    """
+    Calculates and updates the game score based on the pet's most important factors of life.
+    """
     game.set_score(game.score() + (age * 10 + happiness / 10))
+
 def curve_generator(minimum2: number, maximum2: number):
+    """
+    Generates a random value that simulates a bell curve distribution by summing multiple random values.
+    """
     global total
     # This function acts as a simple replacement for the bell curve since The
     # bell curve takes too much computational work, and gives near same results.
@@ -30,30 +49,42 @@ def curve_generator(minimum2: number, maximum2: number):
     for index in range(5):
         total += randint(minimum2 / 5, maximum2 / 5)
     return total
+
 def calc_stat_rates():
+    """
+    Calculates the rates at which the pet's stats change over time.
+    """
     global hunger_rate, energy_rate, happiness_rate
     hunger_rate = cap(1 - happiness / 200 + age / 100 + energy / 75 - INTELIGENCE / 100,
-        0.75,
-        3)
+        0.75, 3)
     energy_rate = cap(1 + happiness / 75 + age / 100 - hunger / 75 + INTELIGENCE / 100,
-        0.75,
-        3)
+        0.75, 3)
     happiness_rate = cap(1 + hunger / 75 + age / 100 - energy / 200 - INTELIGENCE / 100,
-        0.75,
-        3)
+        0.75, 3)
+
 def feed():
+    """
+    Feeds the pet, increasing its food count.
+    """
     global food_count
     led.plot(4, 4 - food_count)
     food_count = cap(food_count + 1, 0, 4)
+
 def sleep():
+    """
+    Puts the pet to sleep.
+    """
     global pet_y, sleep_time, sleep_stage, sleeping
-    pet_y = 4
+    pet_y = 4 # This creates a sence of sleeping because the pet looks shorter on screen
     plot_pet()
     sleep_time = control.millis()
     sleep_stage = 0
     sleeping = True
-# This creates a sence of sleeping because the pet looks shorter on screen
+
 def jump():
+    """
+    Makes the pet jump if it is playful and has enough energy.
+    """
     global pet_y, jumping, jump_start, energy, hunger, happiness
     if personality_use_calc(20, 0.05) < PLAYFULNESS and energy > 50:
         pet_y = 2
@@ -63,7 +94,11 @@ def jump():
         energy += -15
         hunger += -15
         happiness += 25
+
 def cap_stats():
+    """
+    Caps the pet's stats (happiness, energy, hunger) to ensure they remain within the range of 0 to 100.
+    """
     global happiness, energy, hunger
     happiness = cap(happiness, 0, 100)
     energy = cap(energy, 0, 100)
@@ -72,6 +107,10 @@ def cap_stats():
 # only 1 clock to check for several events that happen
 # throughout the game
 def timer(time: number, _function: str):
+    """
+    Game's main timer function, which checks if a specified amount of time has passed since the last occurrence of a given event.
+    If the time has passed, it triggers the corresponding function (e.g., pooping, feeding, jumping, etc.) and updates the last occurrence time for that event.
+    """
     global current_time, poop_timer, last_pooped, last_clean_poop, last_stats, last_fed, last_scored, last_aged, age, last_jumped, pet_y, jumping, sleep_time, sleep_stage, energy, sleeping
     current_time = control.millis()
     if _function == "Poop":
@@ -119,9 +158,13 @@ def timer(time: number, _function: str):
                 sleeping = False
                 pet_y = 3
                 plot_pet()
+    
 def calc_death():
-    # Instead of a normal calc_death value, this function checks every stat needed for survival
-    if poop_count >= 3 or (hunger <= 0 or energy <= 0 or happiness <= 0 or age >= life_expectency):
+    """
+    Checks the pet's stats to determine if it has died. If any of the critical stats
+    (poop count, hunger, energy, happiness, or age) reach a fatal level, the game ends.
+    """
+    if poop_count >= 3 or (hunger <= 0 or energy <= 0 or happiness <= 0 or age >= LIFE_EXPECTENCY):
         music.stop_melody(MelodyStopOptions.ALL)
         basic.clear_screen()
         music._play_default_background(music.built_in_playable_melody(Melodies.WAWAWAWAA),
@@ -130,7 +173,12 @@ def calc_death():
         music._play_default_background(music.built_in_playable_melody(Melodies.FUNK),
             music.PlaybackMode.LOOPING_IN_BACKGROUND)
         game.game_over()
+
 def eat():
+    """
+    Allows the pet to eat food if it is hungry and there is food available.
+    Eating increases the pet's hunger stat and decreases the food count.
+    """
     global food_count, hunger
     if food_count >= 1:
         led.unplot(4, 4 - food_count)
@@ -139,24 +187,64 @@ def eat():
         # If still hungery, and there is food, it will eat it all
         if hunger < 100 and food_count >= 1:
             eat()
+
 def poop():
+    """
+    Increases the pet's poop count and updates the LED display to reflect the new poop count.
+    """
     global poop_count
     led.plot(0, 4 - poop_count)
     poop_count = cap(poop_count + 1, 0, 4)
+
 def calc_stats():
+    """
+    Calculates the pet's stats (happiness, energy, hunger) based on their respective rates
+    """
     global happiness, energy, hunger
     calc_stat_rates()
     happiness += 0 - happiness_rate
     energy += 0 - energy_rate
     hunger += 0 - hunger_rate
+
 def clean_poop():
+    """
+    Cleans the pet's poop. If the pet is too aggressive, it may refuse to clean the poop, and the poop count will remain the same.
+    If the pet is not aggressive and there is poop to clean, the poop count will always decrease"""
     global poop_count
     if personality_use_calc(35, 0.05) > AGGRESSION and poop_count >= 1:
         poop_count += -1
         led.unplot(0, 4 - poop_count)
+
+music._play_default_background(music.built_in_playable_melody(Melodies.ENTERTAINER),
+    music.PlaybackMode.IN_BACKGROUND)
+
+# Clock initialization
+FRAME_INTERVAL = 50
 frame_start = 0
 elapsed = 0
+
+# Personality initialization
+LIFE_EXPECTENCY = curve_generator(10, 30)
+PLAYER_LUCK = curve_generator(0, 100)
+AGGRESSION = curve_generator(40, 100)
+CURIOSITY = curve_generator(40, 100)
+PLAYFULNESS = curve_generator(40, 100)
+INTELIGENCE = curve_generator(40, 100)
+OBEDIENCE = curve_generator(40, 100)
+
+# Stats initialization
+happiness = 100
+hunger = 100
+energy = 100
+happiness_rate = 1
+hunger_rate = 1
+energy_rate = 1
+
+# Game initialization
+poop_timer = curve_generator(5000, 30000)
 poop_count = 0
+
+current_time = 0
 last_jumped = 0
 last_aged = 0
 last_scored = 0
@@ -164,61 +252,47 @@ last_fed = 0
 last_stats = 0
 last_clean_poop = 0
 last_pooped = 0
-current_time = 0
+
+pet_x = 1
+pet_y = 3
+pet_old_x = 1
+pet_old_y = 3
+
 jump_start = 0
 jumping = False
+
 sleeping = False
 sleep_stage = 0
 sleep_time = 0
+
 food_count = 0
+
 total = 0
 age = 0
-pet_old_y = 0
-pet_old_x = 0
-x = 0
-player_luck = 0
-life_expectency = 0
-pet_x = 0
-pet_y = 0
-energy_rate = 0
-hunger_rate = 0
-happiness_rate = 0
-energy = 0
-hunger = 0
-happiness = 0
-basic.show_icon(IconNames.SMALL_DIAMOND)
+i = 0
+
+# Startup sequence
 music.set_volume(32)
-music._play_default_background(music.built_in_playable_melody(Melodies.ENTERTAINER),
-    music.PlaybackMode.IN_BACKGROUND)
-FRAME_INTERVAL = 50
-happiness = 100
-hunger = 100
-energy = 100
-AGGRESSION = curve_generator(40, 100)
-CURIOSITY = curve_generator(40, 100)
-PLAYFULNESS = curve_generator(40, 100)
-INTELIGENCE = curve_generator(40, 100)
-OBEDIENCE = curve_generator(40, 100)
-poop_timer = curve_generator(5000, 30000)
-happiness_rate = 1
-hunger_rate = 1
-energy_rate = 1
-pet_y = 3
-pet_x = 1
-life_expectency = curve_generator(10, 30)
-player_luck = curve_generator(0, 100)
-timerrr = control.millis()
 game.set_score(0)
+basic.show_icon(IconNames.SMALL_DIAMOND)
 basic.show_icon(IconNames.DIAMOND)
 basic.show_icon(IconNames.SQUARE)
 basic.clear_screen()
 music._play_default_background(music.built_in_playable_melody(Melodies.NYAN),
     music.PlaybackMode.LOOPING_IN_BACKGROUND)
-feed()
-feed()
 plot_pet()
 
+# Player gets 2 food at the start of the game
+feed()
+feed()
+
 def on_forever():
+    """
+    Main game loop, this function is called every FRAME_INTERVAL milliseconds.
+    It handles the timing of various events in the game, such as:
+    pooping, feeding, jumping, and sleeping.
+    It also updates the pet's stats and checks for death conditions.
+    """
     global elapsed, frame_start
     timer(poop_timer, "Poop")
     timer(2000, "calc_stats")
@@ -244,8 +318,12 @@ def on_forever():
     elapsed = control.millis() - frame_start
     if elapsed < FRAME_INTERVAL:
         basic.pause(FRAME_INTERVAL - elapsed)
-    # frame_start is calculated at the end of the frame
-    # This is done because the microbit does other functions
-    # Between the forever loops
+    """
+    frame_start is calculated at the end of the frame to ensure that
+    the timing of events is accurate. This accounts for any delays
+    caused by other functions or processes running on the micro:bit,
+    ensuring that the game loop maintains a consistent frame rate
+    and that events occur at the intended intervals.
+    """
     frame_start = control.millis()
 basic.forever(on_forever)
