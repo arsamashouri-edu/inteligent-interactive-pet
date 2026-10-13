@@ -10,11 +10,39 @@ def cap_stats():
     happiness = cap(happiness, 0, 100)
     energy = cap(energy, 0, 100)
     hunger = cap(hunger, 0, 100)
+
+def on_command_received():
+    if myController.button_was_pressed("1"):
+        if energy < 55:
+            sleep()
+        else:
+            timer(500, "clean_poop")
+    if myController.button_was_pressed("3"):
+        jump()
+    if myController.button_was_pressed("4"):
+        timer(500, "feed")
+myController.on_command_received(on_command_received)
+
 def poop():
     global poop_count
     # Increases the pet's poop count and updates the LED display to reflect the new poop count.
     led.plot(0, 4 - poop_count)
     poop_count = cap(poop_count + 1, 0, 4)
+
+def on_setup_confirmation_mode_no_require():
+    myController.apply_settings("""
+        vc;init;
+        vc;pref;60;
+        vc;legoHub;0;0;;500;500;
+        vc;sl;0;0;255;1;0;0;1;32;1;8;;power;%5B%5D;
+        vc;b;1;1;2;<i class="fa-solid fa-poo"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
+        vc;b;3;1;3;<i class="fa-solid fa-basketball"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
+        vc;b;4;1;4;<i class="fa-solid fa-drumstick-bite"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
+        vc;show;sl,br,bl;
+        """)
+myController.on_setup(myController.ConfirmationMode.NO_REQUIRE,
+    on_setup_confirmation_mode_no_require)
+
 def timer(time: number, _function: str):
     global current_time, poop_timer, last_pooped, last_clean_poop, last_stats, last_fed, last_scored, last_aged, age, last_jumped, pet_y, jumping, sleep_time, sleep_stage, energy, sleeping
     # Game's main timer function, which checks if a specified amount of time has passed since the last occurrence of a given event.
@@ -37,7 +65,7 @@ def timer(time: number, _function: str):
         if current_time > time + last_fed:
             last_fed = control.millis()
             feed()
-    elif _function == "Score":
+    elif _function == "score":
         if current_time > time + last_scored:
             last_scored = control.millis()
             calc_score()
@@ -56,7 +84,7 @@ def timer(time: number, _function: str):
             pet_y = 3
             plot_pet()
             jumping = False
-    elif _function == "Wakeup":
+    elif _function == "wake":
         if current_time > time + sleep_time:
             sleep_time = control.millis()
             sleep_stage = sleep_stage + 1
@@ -233,8 +261,6 @@ pet_old_x = 1
 pet_old_y = 3
 # Startup sequence
 music.set_volume(32)
-myController.use_bluetooth()
-myController.use_serial()
 game.set_score(0)
 basic.show_icon(IconNames.SMALL_DIAMOND)
 basic.show_icon(IconNames.DIAMOND)
@@ -246,28 +272,8 @@ plot_pet()
 # Player gets 2 food at the start of the game
 feed()
 feed()
-
-def on_command_received():
-    if myController.button_was_pressed("1"):
-        basic.show_string("P")
-    if myController.button_was_pressed("3"):
-        basic.show_string("B")
-    if myController.button_was_pressed("4"):
-        basic.show_string("F")
-myController.on_command_received(on_command_received)
-
-def on_setup_confirmation_mode_no_require():
-    myController.apply_settings("""
-    vc;init;
-    vc;pref;60;
-    vc;legoHub;0;0;;500;500;
-    vc;sl;0;0;255;1;0;0;1;32;1;8;;power;%5B%5D;
-    vc;b;1;1;2;<i class="fa-solid fa-poo"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
-    vc;b;3;1;3;<i class="fa-solid fa-basketball"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
-    vc;b;4;1;4;<i class="fa-solid fa-drumstick-bite"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
-    vc;show;sl,br,bl;""")
-myController.on_setup(myController.ConfirmationMode.NO_REQUIRE,
-    on_setup_confirmation_mode_no_require)
+myController.use_bluetooth()
+myController.use_serial()
 
 def on_forever():
     global elapsed, frame_start
@@ -280,7 +286,7 @@ def on_forever():
     if jumping:
         timer(500, "jumpDown")
     elif sleeping:
-        timer(500, "Wakeup")
+        timer(500, "wake")
     elif input.button_is_pressed(Button.A):
         timer(500, "feed")
     elif input.button_is_pressed(Button.B):
@@ -292,7 +298,7 @@ def on_forever():
         jump()
     if hunger < 75 + CURIOSITY / 10:
         eat()
-    timer(5000, "Score")
+    timer(5000, "score")
     timer(20000, "age")
     cap_stats()
     calc_death()

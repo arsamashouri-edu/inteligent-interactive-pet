@@ -68,7 +68,7 @@ function timer (time: number, _function: string) {
             last_fed = control.millis()
             feed()
         }
-    } else if (_function == "Score") {
+    } else if (_function == "score") {
         if (current_time > time + last_scored) {
             last_scored = control.millis()
             calc_score()
@@ -90,7 +90,7 @@ function timer (time: number, _function: string) {
             plot_pet()
             jumping = false
         }
-    } else if (_function == "Wakeup") {
+    } else if (_function == "wake") {
         if (current_time > time + sleep_time) {
             sleep_time = control.millis()
             sleep_stage = sleep_stage + 1
@@ -275,8 +275,6 @@ pet_old_x = 1
 pet_old_y = 3
 // Startup sequence
 music.setVolume(32)
-myController.useBluetooth()
-myController.useSerial()
 game.setScore(0)
 basic.showIcon(IconNames.SmallDiamond)
 basic.showIcon(IconNames.Diamond)
@@ -287,6 +285,8 @@ plot_pet()
 // Player gets 2 food at the start of the game
 feed()
 feed()
+myController.useBluetooth()
+myController.useSerial()
 basic.forever(function () {
     // Main game loop, this function is called every FRAME_INTERVAL milliseconds.
     // It handles the timing of various events in the game, such as:
@@ -297,7 +297,7 @@ basic.forever(function () {
     if (jumping) {
         timer(500, "jumpDown")
     } else if (sleeping) {
-        timer(500, "Wakeup")
+        timer(500, "wake")
     } else if (input.buttonIsPressed(Button.A)) {
         timer(500, "feed")
     } else if (input.buttonIsPressed(Button.B)) {
@@ -312,7 +312,7 @@ basic.forever(function () {
     if (hunger < 75 + CURIOSITY / 10) {
         eat()
     }
-    timer(5000, "Score")
+    timer(5000, "score")
     timer(20000, "age")
     cap_stats()
     calc_death()
