@@ -68,7 +68,7 @@ def capStats():
 # only 1 clock to check for several events that happen
 # throughout the game
 def Timer(time: number, _function: str):
-    global runningTime, PoopTimer, LastPoop, LastCleanPoop, LastStats, LastFed, LastTBM, TopBarMode, LastBarFlash, LastScore, LastAge, Age, LastJump
+    global runningTime, PoopTimer, LastPoop, LastCleanPoop, LastStats, LastFed, LastScore, LastAge, Age, LastJump
     runningTime = control.millis()
     if _function == "Poop":
         if runningTime > time + LastPoop:
@@ -87,13 +87,6 @@ def Timer(time: number, _function: str):
         if runningTime > time + LastFed:
             LastFed = control.millis()
             Feed()
-    elif _function == "TopBarMode":
-        if runningTime > time + LastTBM:
-            LastTBM = control.millis()
-            TopBarMode = not (TopBarMode)
-    elif _function == "BarFlash":
-        if runningTime > time + LastBarFlash:
-            LastBarFlash = control.millis()
     elif _function == "Score":
         if runningTime > time + LastScore:
             LastScore = control.millis()
@@ -103,7 +96,7 @@ def Timer(time: number, _function: str):
             LastAge = control.millis()
             Age += 1
             music._play_default_background(music.built_in_playable_melody(Melodies.BA_DING),
-                music.PlaybackMode.IN_BACKGROUND)
+                music.PlaybackMode.UNTIL_DONE)
     elif _function == "Jump":
         if runningTime > time + LastJump:
             LastJump = control.millis()
@@ -122,7 +115,7 @@ def Death():
 def Eat():
     global FoodCount, Hunger, Thirst
     if FoodCount >= 1:
-        led.unplot(4, TopFood)
+        led.unplot(4, 4 - FoodCount)
         FoodCount += -1
         Hunger += 15
         Thirst += 5
@@ -146,12 +139,11 @@ def CleanPoop():
     if PersonalityUseCalc(35, 0.05) > Aggression and PoopCount >= 1:
         PoopCount += -1
         led.unplot(0, 4 - PoopCount)
-Elapsed = 0
 FrameStart = 0
+Elapsed = 0
 LastJump = 0
 LastAge = 0
 LastScore = 0
-LastBarFlash = 0
 LastTBM = 0
 LastFed = 0
 LastStats = 0
@@ -165,7 +157,6 @@ PlayerLuck = 0
 LifeExpecteny = 0
 PetX = 0
 PetY = 0
-TopFood = 0
 TopBarMode = False
 EnergyRate = 0
 ThirstRate = 0
@@ -204,7 +195,6 @@ HappinessRate = 1
 HungerRate = 1
 ThirstRate = 1
 EnergyRate = 1
-TopBarMode = False
 TopPoop2 = 4
 TopFood = 4
 PetY = 3
@@ -218,12 +208,11 @@ basic.show_icon(IconNames.SQUARE)
 basic.clear_screen()
 music._play_default_background(music.built_in_playable_melody(Melodies.NYAN),
     music.PlaybackMode.LOOPING_IN_BACKGROUND)
+Feed()
+Feed()
 
 def on_forever():
-    global timerrr, FrameStart, Elapsed
-    datalogger.log(datalogger.create_cv("Time", control.millis() - timerrr))
-    timerrr = control.millis()
-    FrameStart = control.millis()
+    global Elapsed, FrameStart
     Timer(PoopTimer, "Poop")
     Timer(2000, "CalcStats")
     # Soon: BarMode
@@ -252,4 +241,5 @@ def on_forever():
     Elapsed = control.millis() - FrameStart
     if Elapsed < FrameInterval:
         basic.pause(FrameInterval - Elapsed)
+    FrameStart = control.millis()
 basic.forever(on_forever)

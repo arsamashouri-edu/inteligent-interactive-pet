@@ -1,9 +1,7 @@
-function Cap(value: number, minimum: number, maximum: number): number {
+function Cap (value: number, minimum: number, maximum: number) {
     return Math.max(minimum, Math.min(maximum, value))
 }
-
-function PlotPet() {
-    
+function PlotPet () {
     led.unplot(Cap(PetOldX, 0, 4), Cap(PetOldY, 0, 4))
     led.unplot(Cap(PetOldX, 0, 4), Cap(PetOldY + 1, 0, 4))
     led.unplot(Cap(PetOldX + 1, 0, 4), Cap(PetOldY, 0, 4))
@@ -15,48 +13,36 @@ function PlotPet() {
     PetOldY = PetY
     PetOldX = PetX
 }
-
-function PersonalityUseCalc(curve: number, luckModifier: number): number {
+function PersonalityUseCalc (curve: number, luckModifier: number) {
     return CurveGenerator(curve + randint(0, luckModifier * PlayerLuck), 100)
 }
-
-function CalcScore() {
+function CalcScore () {
     game.setScore(game.score() + (Age * 10 + Hapiness / 10))
 }
-
-function CurveGenerator(minimum2: number, maximum2: number): number {
-    
-    //  This function acts as a simple replacement for the bell curve since The
-    //  bell curve takes too much computational work, and gives near same results.
+function CurveGenerator (minimum2: number, maximum2: number) {
+    // This function acts as a simple replacement for the bell curve since The
+    // bell curve takes too much computational work, and gives near same results.
     total = 0
     for (let index = 0; index < 5; index++) {
         total += randint(minimum2 / 5, maximum2 / 5)
     }
     return total
 }
-
-function CalcStatRates() {
-    
+function CalcStatRates () {
     HungerRate = Cap(1 - Hapiness / 200 + Age / 100 + Energy / 75 - Intelligence / 100, 0.75, 3)
     EnergyRate = Cap(1 + Hapiness / 75 + Age / 100 - Hunger / 75 + Intelligence / 100, 0.75, 3)
     HappinessRate = Cap(1 + Hunger / 75 + Age / 100 - Energy / 200 - Intelligence / 100, 0.75, 3)
     ThirstRate = Cap(1 + Age / 100 + Energy / 75 - Intelligence / 100, 0.75, 3)
 }
-
-function Feed() {
-    
+function Feed () {
     led.plot(4, 4 - FoodCount)
     FoodCount += 1
 }
-
-function Sleep() {
-    
+function Sleep () {
     PetY = 4
 }
-
-//  This creates a sence of sleeping because the pet looks shorter on screen
-function Jump() {
-    
+// This creates a sence of sleeping because the pet looks shorter on screen
+function Jump () {
     if (PersonalityUseCalc(50, 0.05) < Playfulness && Energy > 50) {
         PetY = 2
         PlotPet()
@@ -70,22 +56,17 @@ function Jump() {
         Energy += -15
         Hunger += -15
     }
-    
 }
-
-function capStats() {
-    
+function capStats () {
     Hapiness = Cap(Hapiness, 0, 100)
     Energy = Cap(Energy, 0, 100)
     Hunger = Cap(Hunger, 0, 100)
     Thirst = Cap(Thirst, 0, 100)
 }
-
-//  The game runs only on 1 clock, this function uses
-//  only 1 clock to check for several events that happen
-//  throughout the game
-function Timer(time: number, _function: string) {
-    
+// The game runs only on 1 clock, this function uses
+// only 1 clock to check for several events that happen
+// throughout the game
+function Timer (time: number, _function: string) {
     runningTime = control.millis()
     if (_function == "Poop") {
         if (runningTime > time + LastPoop) {
@@ -93,61 +74,41 @@ function Timer(time: number, _function: string) {
             LastPoop = control.millis()
             Poop()
         }
-        
     } else if (_function == "CleanPoop") {
         if (runningTime > time + LastCleanPoop) {
             LastCleanPoop = control.millis()
             CleanPoop()
         }
-        
     } else if (_function == "CalcStats") {
         if (runningTime > time + LastStats) {
             LastStats = control.millis()
             CalcStats()
         }
-        
     } else if (_function == "Feed") {
         if (runningTime > time + LastFed) {
             LastFed = control.millis()
             Feed()
         }
-        
-    } else if (_function == "TopBarMode") {
-        if (runningTime > time + LastTBM) {
-            LastTBM = control.millis()
-            TopBarMode = !TopBarMode
-        }
-        
-    } else if (_function == "BarFlash") {
-        if (runningTime > time + LastBarFlash) {
-            LastBarFlash = control.millis()
-        }
-        
     } else if (_function == "Score") {
         if (runningTime > time + LastScore) {
             LastScore = control.millis()
             CalcScore()
         }
-        
     } else if (_function == "Age") {
         if (runningTime > time + LastAge) {
             LastAge = control.millis()
             Age += 1
-            music._playDefaultBackground(music.builtInPlayableMelody(Melodies.BaDing), music.PlaybackMode.InBackground)
+            music._playDefaultBackground(music.builtInPlayableMelody(Melodies.BaDing), music.PlaybackMode.UntilDone)
         }
-        
     } else if (_function == "Jump") {
         if (runningTime > time + LastJump) {
             LastJump = control.millis()
             Jump()
         }
-        
     }
-    
 }
-
-function Death() {
-    //  Instead of a normal death value, this function checks every stat needed for survival
+function Death () {
+    // Instead of a normal death value, this function checks every stat needed for survival
     if (PoopCount >= 3 || (Hunger <= 0 || Energy <= 0 || Thirst <= 0 || Hapiness <= 0 || Age >= LifeExpecteny)) {
         music.stopMelody(MelodyStopOptions.All)
         basic.clearScreen()
@@ -156,59 +117,44 @@ function Death() {
         music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Funk), music.PlaybackMode.LoopingInBackground)
         game.gameOver()
     }
-    
 }
-
-function Eat() {
-    
+function Eat () {
     if (FoodCount >= 1) {
-        led.unplot(4, TopFood)
+        led.unplot(4, 4 - FoodCount)
         FoodCount += -1
         Hunger += 15
         Thirst += 5
-        //  If still hungery, and there is food, it will eat it all
+        // If still hungery, and there is food, it will eat it all
         if (Hunger < 100 && FoodCount >= 1) {
             Eat()
         }
-        
     }
-    
 }
-
-function Poop() {
-    
+function Poop () {
     led.plot(0, 4 - PoopCount)
     PoopCount += 1
 }
-
-function CalcStats() {
-    
+function CalcStats () {
     CalcStatRates()
     if (TopBarMode) {
         Thirst += 0 - ThirstRate
         Hapiness += 0 - HappinessRate
     }
-    
     Energy += 0 - EnergyRate
     Hunger += 0 - HungerRate
 }
-
-function CleanPoop() {
-    
+function CleanPoop () {
     if (PersonalityUseCalc(35, 0.05) > Aggression && PoopCount >= 1) {
         PoopCount += -1
         led.unplot(0, 4 - PoopCount)
     }
-    
 }
-
-let Elapsed = 0
 let FrameStart = 0
+let Elapsed = 0
+let TopBarMode = 0
 let LastJump = 0
 let LastAge = 0
 let LastScore = 0
-let LastBarFlash = 0
-let LastTBM = 0
 let LastFed = 0
 let LastStats = 0
 let LastCleanPoop = 0
@@ -221,8 +167,6 @@ let PlayerLuck = 0
 let LifeExpecteny = 0
 let PetX = 0
 let PetY = 0
-let TopFood = 0
-let TopBarMode = false
 let EnergyRate = 0
 let ThirstRate = 0
 let HungerRate = 0
@@ -238,6 +182,7 @@ let Thirst = 0
 let Energy = 0
 let Hunger = 0
 let Hapiness = 0
+let LastTBM = 0
 basic.showIcon(IconNames.SmallDiamond)
 music.setVolume(32)
 music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Entertainer), music.PlaybackMode.InBackground)
@@ -259,9 +204,8 @@ HappinessRate = 1
 HungerRate = 1
 ThirstRate = 1
 EnergyRate = 1
-TopBarMode = false
 let TopPoop2 = 4
-TopFood = 4
+let TopFood = 4
 PetY = 3
 PetX = 1
 LifeExpecteny = CurveGenerator(10, 30)
@@ -272,20 +216,17 @@ basic.showIcon(IconNames.Diamond)
 basic.showIcon(IconNames.Square)
 basic.clearScreen()
 music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Nyan), music.PlaybackMode.LoopingInBackground)
-basic.forever(function on_forever() {
-    
-    datalogger.log(datalogger.createCV("Time", control.millis() - timerrr))
-    timerrr = control.millis()
-    FrameStart = control.millis()
+Feed()
+Feed()
+basic.forever(function () {
     Timer(PoopTimer, "Poop")
     Timer(2000, "CalcStats")
-    //  Soon: BarMode
+    // Soon: BarMode
     if (TopBarMode) {
         Timer(1000, "BarFlash")
         if (input.buttonIsPressed(Button.AB)) {
             Timer(500, "TopBarMode")
         }
-        
     } else if (input.buttonIsPressed(Button.AB)) {
         Timer(500, "TopBarMode")
     } else if (input.buttonIsPressed(Button.A)) {
@@ -296,15 +237,12 @@ basic.forever(function on_forever() {
         } else {
             Timer(500, "CleanPoop")
         }
-        
     } else if (input.isGesture(Gesture.Shake)) {
         Jump()
     }
-    
     if (Hunger < 75 + Curiosity / 10) {
         Eat()
     }
-    
     Timer(5000, "Score")
     Timer(20000, "Age")
     capStats()
@@ -314,5 +252,5 @@ basic.forever(function on_forever() {
     if (Elapsed < FrameInterval) {
         basic.pause(FrameInterval - Elapsed)
     }
-    
+    FrameStart = control.millis()
 })
