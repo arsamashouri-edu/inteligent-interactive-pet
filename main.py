@@ -2,16 +2,23 @@ def Cap(value: number, minimum: number, maximum: number):
     return max(minimum, min(maximum, value))
 def PlotPet():
     global PetOldY, PetOldX
-    led.unplot(Cap(PetOldX, 0, 4), Cap(PetOldY, 0, 4))
-    led.unplot(Cap(PetOldX, 0, 4), Cap(PetOldY + 1, 0, 4))
-    led.unplot(Cap(PetOldX + 1, 0, 4), Cap(PetOldY, 0, 4))
-    led.unplot(Cap(PetOldX + 1, 0, 4), Cap(PetOldY + 1, 0, 4))
-    led.plot(Cap(PetX, 0, 4), Cap(PetY, 0, 4))
-    led.plot(Cap(PetX, 0, 4), Cap(PetY + 1, 0, 4))
-    led.plot(Cap(PetX + 1, 0, 4), Cap(PetY, 0, 4))
-    led.plot(Cap(PetX + 1, 0, 4), Cap(PetY + 1, 0, 4))
-    PetOldY = PetY
-    PetOldX = PetX
+    if PetX != PetOldX or PetY != PetOldY:
+        x = PetOldX
+        while x < PetOldX + 2:
+            y = PetOldY
+            while y < PetOldY + 2:
+                led.unplot(Cap(x, 0, 4), Cap(y, 0, 4))
+                y += 1
+            x += 1
+        x = PetX
+        while x < PetX + 2:
+            y = PetY
+            while y < PetY + 2:
+                led.plot(Cap(x, 0, 4), Cap(y, 0, 4))
+                y += 1
+            x += 1
+        PetOldY = PetY
+        PetOldX = PetX
 def PersonalityUseCalc(curve: number, luckModifier: number):
     return CurveGenerator(curve + randint(0, luckModifier * PlayerLuck), 100)
 def CalcScore():
@@ -25,7 +32,7 @@ def CurveGenerator(minimum2: number, maximum2: number):
         total += randint(minimum2 / 5, maximum2 / 5)
     return total
 def CalcStatRates():
-    global HungerRate, EnergyRate, HappinessRate, ThirstRate
+    global HungerRate, EnergyRate, HappinessRate
     HungerRate = Cap(1 - Hapiness / 200 + Age / 100 + Energy / 75 - Intelligence / 100,
         0.75,
         3)
@@ -35,7 +42,6 @@ def CalcStatRates():
     HappinessRate = Cap(1 + Hunger / 75 + Age / 100 - Energy / 200 - Intelligence / 100,
         0.75,
         3)
-    ThirstRate = Cap(1 + Age / 100 + Energy / 75 - Intelligence / 100, 0.75, 3)
 def Feed():
     global FoodCount
     led.plot(4, 4 - FoodCount)
@@ -45,25 +51,21 @@ def Sleep():
     PetY = 4
 # This creates a sence of sleeping because the pet looks shorter on screen
 def Jump():
-    global PetY, Energy, Hunger
+    global PetY, Energy, Hunger, Hapiness
     if PersonalityUseCalc(50, 0.05) < Playfulness and Energy > 50:
         PetY = 2
         PlotPet()
-        led.unplot(1, 4)
-        led.unplot(2, 4)
         basic.pause(500)
         PetY = 3
         PlotPet()
-        led.unplot(1, 2)
-        led.unplot(2, 2)
         Energy += -15
         Hunger += -15
+        Hapiness += 25
 def capStats():
-    global Hapiness, Energy, Hunger, Thirst
+    global Hapiness, Energy, Hunger
     Hapiness = Cap(Hapiness, 0, 100)
     Energy = Cap(Energy, 0, 100)
     Hunger = Cap(Hunger, 0, 100)
-    Thirst = Cap(Thirst, 0, 100)
 # The game runs only on 1 clock, this function uses
 # only 1 clock to check for several events that happen
 # throughout the game
@@ -103,7 +105,7 @@ def Timer(time: number, _function: str):
             Jump()
 def Death():
     # Instead of a normal death value, this function checks every stat needed for survival
-    if PoopCount >= 3 or (Hunger <= 0 or Energy <= 0 or Thirst <= 0 or Hapiness <= 0 or Age >= LifeExpecteny):
+    if PoopCount >= 3 or (Hunger <= 0 or Energy <= 0 or Hapiness <= 0 or Age >= LifeExpecteny):
         music.stop_melody(MelodyStopOptions.ALL)
         basic.clear_screen()
         music._play_default_background(music.built_in_playable_melody(Melodies.WAWAWAWAA),
@@ -113,12 +115,11 @@ def Death():
             music.PlaybackMode.LOOPING_IN_BACKGROUND)
         game.game_over()
 def Eat():
-    global FoodCount, Hunger, Thirst
+    global FoodCount, Hunger
     if FoodCount >= 1:
         led.unplot(4, 4 - FoodCount)
         FoodCount += -1
         Hunger += 15
-        Thirst += 5
         # If still hungery, and there is food, it will eat it all
         if Hunger < 100 and FoodCount >= 1:
             Eat()
@@ -127,11 +128,9 @@ def Poop():
     led.plot(0, 4 - PoopCount)
     PoopCount += 1
 def CalcStats():
-    global Thirst, Hapiness, Energy, Hunger
+    global Hapiness, Energy, Hunger
     CalcStatRates()
-    if TopBarMode:
-        Thirst += 0 - ThirstRate
-        Hapiness += 0 - HappinessRate
+    Hapiness += 0 - HappinessRate
     Energy += 0 - EnergyRate
     Hunger += 0 - HungerRate
 def CleanPoop():
@@ -141,35 +140,31 @@ def CleanPoop():
         led.unplot(0, 4 - PoopCount)
 FrameStart = 0
 Elapsed = 0
+PoopCount = 0
 LastJump = 0
 LastAge = 0
 LastScore = 0
-LastTBM = 0
 LastFed = 0
 LastStats = 0
 LastCleanPoop = 0
 LastPoop = 0
 runningTime = 0
+FoodCount = 0
 total = 0
+Age = 0
 PetOldY = 0
 PetOldX = 0
 PlayerLuck = 0
 LifeExpecteny = 0
 PetX = 0
 PetY = 0
-TopBarMode = False
 EnergyRate = 0
-ThirstRate = 0
 HungerRate = 0
 HappinessRate = 0
 PoopTimer = 0
-FoodCount = 0
-PoopCount = 0
-Age = 0
 Intelligence = 0
 Playfulness = 0
 Aggression = 0
-Thirst = 0
 Energy = 0
 Hunger = 0
 Hapiness = 0
@@ -181,22 +176,15 @@ FrameInterval = 50
 Hapiness = 100
 Hunger = 100
 Energy = 100
-Thirst = 100
 Aggression = CurveGenerator(1, 100)
 Curiosity = CurveGenerator(1, 100)
 Playfulness = CurveGenerator(1, 100)
 Intelligence = CurveGenerator(1, 100)
 Obedience = CurveGenerator(1, 100)
-Age = 0
-PoopCount = 0
-FoodCount = 0
 PoopTimer = CurveGenerator(5000, 30000)
 HappinessRate = 1
 HungerRate = 1
-ThirstRate = 1
 EnergyRate = 1
-TopPoop2 = 4
-TopFood = 4
 PetY = 3
 PetX = 1
 LifeExpecteny = CurveGenerator(10, 30)
@@ -215,12 +203,7 @@ def on_forever():
     global Elapsed, FrameStart
     Timer(PoopTimer, "Poop")
     Timer(2000, "CalcStats")
-    # Soon: BarMode
-    if TopBarMode:
-        Timer(1000, "BarFlash")
-        if input.button_is_pressed(Button.AB):
-            Timer(500, "TopBarMode")
-    elif input.button_is_pressed(Button.AB):
+    if input.button_is_pressed(Button.AB):
         Timer(500, "TopBarMode")
     elif input.button_is_pressed(Button.A):
         Timer(500, "Feed")
@@ -241,5 +224,8 @@ def on_forever():
     Elapsed = control.millis() - FrameStart
     if Elapsed < FrameInterval:
         basic.pause(FrameInterval - Elapsed)
+    # FrameStart is calculated at the end of the frame
+    # This is done because the microbit does other functions
+    # Between the forever loops
     FrameStart = control.millis()
 basic.forever(on_forever)
