@@ -273,6 +273,7 @@ pet_x = 1
 pet_y = 3
 pet_old_x = 1
 pet_old_y = 3
+let sound_increase = true
 // Startup sequence
 music.setVolume(32)
 game.setScore(0)
@@ -308,6 +309,18 @@ basic.forever(function () {
         }
     } else if (input.logoIsPressed()) {
         jump()
+    } else if (input.isGesture(Gesture.Shake)) {
+        if (sound_increase) {
+            music.setVolume(music.volume() + 1)
+            if (music.volume() == 255) {
+                sound_increase = false
+            }
+        } else {
+            music.setVolume(music.volume() - 1)
+            if (music.volume() == 0) {
+                sound_increase = true
+            }
+        }
     }
     if (hunger < 75 + CURIOSITY / 10) {
         eat()
