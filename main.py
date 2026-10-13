@@ -1,7 +1,7 @@
 def Cap(value: number, minimum: number, maximum: number):
     return max(minimum, min(maximum, value))
 def PlotPet():
-    global PetOldY, PetOldX
+    global PetOldY, PetOldX, PetX, PetY
     if PetX != PetOldX or PetY != PetOldY:
         x = PetOldX
         while x < PetOldX + 2:
@@ -45,19 +45,18 @@ def CalcStatRates():
 def Feed():
     global FoodCount
     led.plot(4, 4 - FoodCount)
-    FoodCount += 1
+    FoodCount = Cap(FoodCount + 1, 0, 4)
 def Sleep():
     global PetY
     PetY = 4
 # This creates a sence of sleeping because the pet looks shorter on screen
 def Jump():
-    global PetY, Energy, Hunger, Hapiness
-    if PersonalityUseCalc(50, 0.05) < Playfulness and Energy > 50:
+    global Jumping, JumpStart, Energy, Hunger, Hapiness, PetY
+    if PersonalityUseCalc(20, 0.05) < Playfulness and Energy > 50:
         PetY = 2
         PlotPet()
-        basic.pause(500)
-        PetY = 3
-        PlotPet()
+        Jumping = True
+        JumpStart = control.millis()
         Energy += -15
         Hunger += -15
         Hapiness += 25
@@ -70,7 +69,7 @@ def capStats():
 # only 1 clock to check for several events that happen
 # throughout the game
 def Timer(time: number, _function: str):
-    global runningTime, PoopTimer, LastPoop, LastCleanPoop, LastStats, LastFed, LastScore, LastAge, Age, LastJump
+    global runningTime, PoopTimer, LastPoop, LastCleanPoop, LastStats, LastFed, LastScore, LastAge, Age, LastJump, Jumping
     runningTime = control.millis()
     if _function == "Poop":
         if runningTime > time + LastPoop:
@@ -103,6 +102,11 @@ def Timer(time: number, _function: str):
         if runningTime > time + LastJump:
             LastJump = control.millis()
             Jump()
+    elif _function == "JumpDown":
+        if runningTime > time + JumpStart:
+            PetY = 3
+            PlotPet()
+            Jumping = False
 def Death():
     # Instead of a normal death value, this function checks every stat needed for survival
     if PoopCount >= 3 or (Hunger <= 0 or Energy <= 0 or Hapiness <= 0 or Age >= LifeExpecteny):
@@ -126,7 +130,7 @@ def Eat():
 def Poop():
     global PoopCount
     led.plot(0, 4 - PoopCount)
-    PoopCount += 1
+    PoopCount = Cap(PoopCount + 1, 0, 4)
 def CalcStats():
     global Hapiness, Energy, Hunger
     CalcStatRates()
@@ -149,6 +153,8 @@ LastStats = 0
 LastCleanPoop = 0
 LastPoop = 0
 runningTime = 0
+JumpStart = 0
+Jumping = False
 FoodCount = 0
 total = 0
 Age = 0
@@ -157,7 +163,6 @@ PetOldX = 0
 PlayerLuck = 0
 LifeExpecteny = 0
 PetX = 0
-PetY = 0
 EnergyRate = 0
 HungerRate = 0
 HappinessRate = 0
@@ -178,7 +183,7 @@ Hunger = 100
 Energy = 100
 Aggression = CurveGenerator(1, 100)
 Curiosity = CurveGenerator(1, 100)
-Playfulness = CurveGenerator(1, 100)
+Playfulness = CurveGenerator(40, 100)
 Intelligence = CurveGenerator(1, 100)
 Obedience = CurveGenerator(1, 100)
 PoopTimer = CurveGenerator(5000, 30000)
@@ -203,8 +208,8 @@ def on_forever():
     global Elapsed, FrameStart
     Timer(PoopTimer, "Poop")
     Timer(2000, "CalcStats")
-    if input.button_is_pressed(Button.AB):
-        Timer(500, "TopBarMode")
+    if Jumping:
+        Timer(500, "JumpDown")
     elif input.button_is_pressed(Button.A):
         Timer(500, "Feed")
     elif input.button_is_pressed(Button.B):
@@ -212,7 +217,7 @@ def on_forever():
             Sleep()
         else:
             Timer(500, "CleanPoop")
-    elif input.is_gesture(Gesture.SHAKE):
+    elif input.logo_is_pressed():
         Jump()
     if Hunger < 75 + Curiosity / 10:
         Eat()

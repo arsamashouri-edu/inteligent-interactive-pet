@@ -4,28 +4,26 @@ function Cap (value: number, minimum: number, maximum: number) {
 function PlotPet () {
     let x: number;
 let y: number;
-if (PetX != PetOldX || PetY != PetOldY) {
-        x = PetOldX
-        while (x < PetOldX + 2) {
-            y = PetOldY
-            while (y < PetOldY + 2) {
-                led.unplot(Cap(x, 0, 4), Cap(y, 0, 4))
-                y += 1
-            }
-            x += 1
+x = PetOldX
+    while (x < PetOldX + 2) {
+        y = PetOldY
+        while (y < PetOldY + 2) {
+            led.unplot(Cap(x, 0, 4), Cap(y, 0, 4))
+            y += 1
         }
-        x = PetX
-        while (x < PetX + 2) {
-            y = PetY
-            while (y < PetY + 2) {
-                led.plot(Cap(x, 0, 4), Cap(y, 0, 4))
-                y += 1
-            }
-            x += 1
-        }
-        PetOldY = PetY
-        PetOldX = PetX
+        x += 1
     }
+    x = PetX
+    while (x < PetX + 2) {
+        y = PetY2
+        while (y < PetY2 + 2) {
+            led.plot(Cap(x, 0, 4), Cap(y, 0, 4))
+            y += 1
+        }
+        x += 1
+    }
+    PetOldY = PetY2
+    PetOldX = PetX
 }
 function PersonalityUseCalc (curve: number, luckModifier: number) {
     return CurveGenerator(curve + randint(0, luckModifier * PlayerLuck), 100)
@@ -49,19 +47,19 @@ function CalcStatRates () {
 }
 function Feed () {
     led.plot(4, 4 - FoodCount)
-    FoodCount += 1
+    FoodCount = Cap(FoodCount + 1, 0, 4)
 }
 function Sleep () {
-    PetY = 4
+    PetY2 = 4
+    PlotPet()
 }
 // This creates a sence of sleeping because the pet looks shorter on screen
 function Jump () {
-    if (PersonalityUseCalc(50, 0.05) < Playfulness && Energy > 50) {
-        PetY = 2
+    if (PersonalityUseCalc(20, 0.05) < Playfulness && Energy > 50) {
+        PetY2 = 2
         PlotPet()
-        basic.pause(500)
-        PetY = 3
-        PlotPet()
+        Jumping = true
+        JumpStart = control.millis()
         Energy += -15
         Hunger += -15
         Hapiness += 25
@@ -76,7 +74,8 @@ function capStats () {
 // only 1 clock to check for several events that happen
 // throughout the game
 function Timer (time: number, _function: string) {
-    runningTime = control.millis()
+    let PetY: number;
+runningTime = control.millis()
     if (_function == "Poop") {
         if (runningTime > time + LastPoop) {
             PoopTimer = CurveGenerator(5000, 30000)
@@ -114,6 +113,12 @@ function Timer (time: number, _function: string) {
             LastJump = control.millis()
             Jump()
         }
+    } else if (_function == "JumpDown") {
+        if (runningTime > time + JumpStart) {
+            PetY2 = 3
+            PlotPet()
+            Jumping = false
+        }
     }
 }
 function Death () {
@@ -140,7 +145,7 @@ function Eat () {
 }
 function Poop () {
     led.plot(0, 4 - PoopCount)
-    PoopCount += 1
+    PoopCount = Cap(PoopCount + 1, 0, 4)
 }
 function CalcStats () {
     CalcStatRates()
@@ -165,6 +170,8 @@ let LastStats = 0
 let LastCleanPoop = 0
 let LastPoop = 0
 let runningTime = 0
+let JumpStart = 0
+let Jumping = false
 let FoodCount = 0
 let total = 0
 let Age = 0
@@ -173,7 +180,7 @@ let PetOldX = 0
 let PlayerLuck = 0
 let LifeExpecteny = 0
 let PetX = 0
-let PetY = 0
+let PetY2 = 0
 let EnergyRate = 0
 let HungerRate = 0
 let HappinessRate = 0
@@ -191,16 +198,16 @@ let FrameInterval = 50
 Hapiness = 100
 Hunger = 100
 Energy = 100
-Aggression = CurveGenerator(1, 100)
-let Curiosity = CurveGenerator(1, 100)
-Playfulness = CurveGenerator(1, 100)
-Intelligence = CurveGenerator(1, 100)
-let Obedience = CurveGenerator(1, 100)
+Aggression = CurveGenerator(40, 100)
+let Curiosity = CurveGenerator(40, 100)
+Playfulness = CurveGenerator(40, 100)
+Intelligence = CurveGenerator(40, 100)
+let Obedience = CurveGenerator(40, 100)
 PoopTimer = CurveGenerator(5000, 30000)
 HappinessRate = 1
 HungerRate = 1
 EnergyRate = 1
-PetY = 3
+PetY2 = 3
 PetX = 1
 LifeExpecteny = CurveGenerator(10, 30)
 PlayerLuck = CurveGenerator(0, 100)
@@ -212,11 +219,12 @@ basic.clearScreen()
 music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Nyan), music.PlaybackMode.LoopingInBackground)
 Feed()
 Feed()
+PlotPet()
 basic.forever(function () {
     Timer(PoopTimer, "Poop")
     Timer(2000, "CalcStats")
-    if (input.buttonIsPressed(Button.AB)) {
-        Timer(500, "TopBarMode")
+    if (Jumping) {
+        Timer(500, "JumpDown")
     } else if (input.buttonIsPressed(Button.A)) {
         Timer(500, "Feed")
     } else if (input.buttonIsPressed(Button.B)) {
@@ -225,7 +233,7 @@ basic.forever(function () {
         } else {
             Timer(500, "CleanPoop")
         }
-    } else if (input.isGesture(Gesture.Shake)) {
+    } else if (input.logoIsPressed()) {
         Jump()
     }
     if (Hunger < 75 + Curiosity / 10) {
@@ -235,7 +243,6 @@ basic.forever(function () {
     Timer(20000, "Age")
     capStats()
     Death()
-    PlotPet()
     Elapsed = control.millis() - FrameStart
     if (Elapsed < FrameInterval) {
         basic.pause(FrameInterval - Elapsed)
