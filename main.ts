@@ -14,14 +14,14 @@ x = PetOldX
     }
     x = PetX
     while (x < PetX + 2) {
-        y = PetY2
-        while (y < PetY2 + 2) {
+        y = PetY
+        while (y < PetY + 2) {
             led.plot(Cap(x, 0, 4), Cap(y, 0, 4))
             y += 1
         }
         x += 1
     }
-    PetOldY = PetY2
+    PetOldY = PetY
     PetOldX = PetX
 }
 function PersonalityUseCalc (curve: number, luckModifier: number) {
@@ -40,49 +40,43 @@ function CurveGenerator (minimum2: number, maximum2: number) {
     return total
 }
 function CalcStatRates () {
-    HungerRate = Cap(1 - Hapiness / 200 + Age / 100 + Energy2 / 75 - Intelligence / 100, 0.75, 3)
+    HungerRate = Cap(1 - Hapiness / 200 + Age / 100 + Energy / 75 - Intelligence / 100, 0.75, 3)
     EnergyRate = Cap(1 + Hapiness / 75 + Age / 100 - Hunger / 75 + Intelligence / 100, 0.75, 3)
-    HappinessRate = Cap(1 + Hunger / 75 + Age / 100 - Energy2 / 200 - Intelligence / 100, 0.75, 3)
+    HappinessRate = Cap(1 + Hunger / 75 + Age / 100 - Energy / 200 - Intelligence / 100, 0.75, 3)
 }
 function Feed () {
     led.plot(4, 4 - FoodCount)
     FoodCount = Cap(FoodCount + 1, 0, 4)
 }
 function Sleep () {
-    let Energy: any;
-PetY2 = 4
+    PetY = 4
     PlotPet()
     SleepTime = control.millis()
     SleepStage = 0
     Sleeping = true
-    for (let index = 0; index < 10; index++) {
-        basic.pause(500)
-        Energy = Energy + 4.5
-    }
 }
 // This creates a sence of sleeping because the pet looks shorter on screen
 function Jump () {
-    if (PersonalityUseCalc(20, 0.05) < Playfulness && Energy2 > 50) {
-        PetY2 = 2
+    if (PersonalityUseCalc(20, 0.05) < Playfulness && Energy > 50) {
+        PetY = 2
         PlotPet()
         Jumping = true
         JumpStart = control.millis()
-        Energy2 += -15
+        Energy += -15
         Hunger += -15
         Hapiness += 25
     }
 }
 function capStats () {
     Hapiness = Cap(Hapiness, 0, 100)
-    Energy2 = Cap(Energy2, 0, 100)
+    Energy = Cap(Energy, 0, 100)
     Hunger = Cap(Hunger, 0, 100)
 }
 // The game runs only on 1 clock, this function uses
 // only 1 clock to check for several events that happen
 // throughout the game
 function Timer (time: number, _function: string) {
-    let Enegry: any;
-runningTime = control.millis()
+    runningTime = control.millis()
     if (_function == "Poop") {
         if (runningTime > time + LastPoop) {
             PoopTimer = CurveGenerator(5000, 30000)
@@ -122,7 +116,7 @@ runningTime = control.millis()
         }
     } else if (_function == "JumpDown") {
         if (runningTime > time + JumpStart) {
-            PetY2 = 3
+            PetY = 3
             PlotPet()
             Jumping = false
         }
@@ -130,10 +124,10 @@ runningTime = control.millis()
         if (runningTime > time + SleepTime) {
             SleepTime = control.millis()
             SleepStage = SleepStage + 1
-            Energy2 = Energy2 + 4.5
+            Energy = Energy + 4.5
             if (SleepStage == 10) {
                 Sleeping = false
-                PetY2 = 3
+                PetY = 3
                 PlotPet()
             }
         }
@@ -141,7 +135,7 @@ runningTime = control.millis()
 }
 function Death () {
     // Instead of a normal death value, this function checks every stat needed for survival
-    if (PoopCount >= 3 || (Hunger <= 0 || Energy2 <= 0 || Hapiness <= 0 || Age >= LifeExpecteny)) {
+    if (PoopCount >= 3 || (Hunger <= 0 || Energy <= 0 || Hapiness <= 0 || Age >= LifeExpecteny)) {
         music.stopMelody(MelodyStopOptions.All)
         basic.clearScreen()
         music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Wawawawaa), music.PlaybackMode.UntilDone)
@@ -168,7 +162,7 @@ function Poop () {
 function CalcStats () {
     CalcStatRates()
     Hapiness += 0 - HappinessRate
-    Energy2 += 0 - EnergyRate
+    Energy += 0 - EnergyRate
     Hunger += 0 - HungerRate
 }
 function CleanPoop () {
@@ -202,7 +196,7 @@ let x = 0
 let PlayerLuck = 0
 let LifeExpecteny = 0
 let PetX = 0
-let PetY2 = 0
+let PetY = 0
 let EnergyRate = 0
 let HungerRate = 0
 let HappinessRate = 0
@@ -210,7 +204,7 @@ let PoopTimer = 0
 let Intelligence = 0
 let Playfulness = 0
 let Aggression = 0
-let Energy2 = 0
+let Energy = 0
 let Hunger = 0
 let Hapiness = 0
 basic.showIcon(IconNames.SmallDiamond)
@@ -219,7 +213,7 @@ music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Entertainer), 
 let FrameInterval = 50
 Hapiness = 100
 Hunger = 100
-Energy2 = 100
+Energy = 100
 Aggression = CurveGenerator(40, 100)
 let Curiosity = CurveGenerator(40, 100)
 Playfulness = CurveGenerator(40, 100)
@@ -229,7 +223,7 @@ PoopTimer = CurveGenerator(5000, 30000)
 HappinessRate = 1
 HungerRate = 1
 EnergyRate = 1
-PetY2 = 3
+PetY = 3
 PetX = 1
 LifeExpecteny = CurveGenerator(10, 30)
 PlayerLuck = CurveGenerator(0, 100)
@@ -252,7 +246,7 @@ basic.forever(function () {
     } else if (input.buttonIsPressed(Button.A)) {
         Timer(500, "Feed")
     } else if (input.buttonIsPressed(Button.B)) {
-        if (Energy2 < 55) {
+        if (Energy < 55) {
             Sleep()
         } else {
             Timer(500, "CleanPoop")
