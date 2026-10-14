@@ -3,14 +3,9 @@
 
 ## Use as Extension
 
-This repository can be added as an **extension** in MakeCode.
+This repository is not meant to be used as an extension in microsoft makecode
 
-* open [https://makecode.microbit.org/](https://makecode.microbit.org/)
-* click on **New Project**
-* click on **Extensions** under the gearwheel menu
-* search for **https://github.com/arsamashouri-edu/inteligent-interactive-pet** and import
-
-## Edit this project
+## Edit/Fork this project
 
 To edit this repository in MakeCode.
 
