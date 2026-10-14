@@ -32,16 +32,19 @@ function poop () {
     led.plot(0, 4 - poop_count)
     poop_count = cap(poop_count + 1, 0, 4)
 }
+// Apply settings for the controller
+// Controller setup
 myController.onSetup(myController.ConfirmationMode.NoRequire, function () {
     myController.applySettings(`
-    vc;init;
-    vc;pref;60;
-    vc;legoHub;0;0;;500;500;
-    vc;sl;0;0;255;1;0;0;1;32;1;8;;power;%5B%5D;
-    vc;b;1;1;2;<i class="fa-solid fa-poo"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
-    vc;b;3;1;3;<i class="fa-solid fa-basketball"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
-    vc;b;4;1;4;<i class="fa-solid fa-drumstick-bite"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
-    vc;show;sl,br,bl;`)
+        vc;init;
+        vc;pref;60;
+        vc;legoHub;0;0;;500;500;
+        vc;sl;0;0;255;1;0;0;1;32;1;8;;power;%5B%5D;
+        vc;b;1;1;2;<i class="fa-solid fa-poo"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
+        vc;b;3;1;3;<i class="fa-solid fa-basketball"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
+        vc;b;4;1;4;<i class="fa-solid fa-drumstick-bite"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
+        vc;show;sl,br,bl;
+        `)
 })
 function timer (time: number, _function: string) {
     // Game's main timer function, which checks if a specified amount of time has passed since the last occurrence of a given event.
@@ -213,8 +216,6 @@ function calc_stats () {
     energy += 0 - energy_rate
     hunger += 0 - hunger_rate
 }
-let frame_start = 0
-let elapsed = 0
 let total = 0
 let food_count = 0
 let i = 0
@@ -250,16 +251,14 @@ let AGGRESSION = 0
 let PLAYER_LUCK = 0
 let LIFE_EXPECTENCY = 0
 music._playDefaultBackground(music.builtInPlayableMelody(Melodies.Entertainer), music.PlaybackMode.InBackground)
-// Clock initialization
-let FRAME_INTERVAL = 50
 // Personality initialization
 LIFE_EXPECTENCY = curve_generator(10, 30)
 PLAYER_LUCK = curve_generator(0, 100)
-AGGRESSION = curve_generator(40, 100)
+AGGRESSION = curve_generator(5, 50)
 let CURIOSITY = curve_generator(40, 100)
 PLAYFULNESS = curve_generator(40, 100)
 INTELIGENCE = curve_generator(40, 100)
-let OBEDIENCE = curve_generator(40, 100)
+let OBEDIENCE = curve_generator(0, 100)
 // Stats initialization
 happiness = 100
 hunger = 100
@@ -275,7 +274,7 @@ pet_old_x = 1
 pet_old_y = 3
 let sound_increase = true
 // Startup sequence
-music.setVolume(32)
+music.setVolume(0)
 game.setScore(0)
 basic.showIcon(IconNames.SmallDiamond)
 basic.showIcon(IconNames.Diamond)
@@ -288,7 +287,7 @@ feed()
 feed()
 myController.useBluetooth()
 myController.useSerial()
-basic.forever(function () {
+loops.everyInterval(50, function () {
     // Main game loop, this function is called every FRAME_INTERVAL milliseconds.
     // It handles the timing of various events in the game, such as:
     // pooping, feeding, jumping, and sleeping.
@@ -329,14 +328,4 @@ basic.forever(function () {
     timer(20000, "age")
     cap_stats()
     calc_death()
-    elapsed = control.millis() - frame_start
-    if (elapsed < FRAME_INTERVAL) {
-        basic.pause(FRAME_INTERVAL - elapsed)
-    }
-    // frame_start is calculated at the end of the frame to ensure that
-    // the timing of events is accurate. This accounts for any delays
-    // caused by other functions or processes running on the micro:bit,
-    // ensuring that the game loop maintains a consistent frame rate
-    // and that events occur at the intended intervals.
-    frame_start = control.millis()
 })

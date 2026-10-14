@@ -29,6 +29,7 @@ def poop():
     led.plot(0, 4 - poop_count)
     poop_count = cap(poop_count + 1, 0, 4)
 
+# Apply settings for the controller
 def on_setup_confirmation_mode_no_require():
     myController.apply_settings("""
         vc;init;
@@ -40,6 +41,8 @@ def on_setup_confirmation_mode_no_require():
         vc;b;4;1;4;<i class="fa-solid fa-drumstick-bite"></i>;%7B%22pressed%22%3A%5B%5D%2C%22released%22%3A%5B%5D%7D;
         vc;show;sl,br,bl;
         """)
+
+# Controller setup
 myController.on_setup(myController.ConfirmationMode.NO_REQUIRE,
     on_setup_confirmation_mode_no_require)
 
@@ -259,8 +262,9 @@ pet_x = 1
 pet_y = 3
 pet_old_x = 1
 pet_old_y = 3
+sound_increase = True
 # Startup sequence
-music.set_volume(32)
+music.set_volume(120)
 game.set_score(0)
 basic.show_icon(IconNames.SMALL_DIAMOND)
 basic.show_icon(IconNames.DIAMOND)
@@ -276,7 +280,7 @@ myController.use_bluetooth()
 myController.use_serial()
 
 def on_forever():
-    global elapsed, frame_start
+    global sound_increase, elapsed, frame_start
     # Main game loop, this function is called every FRAME_INTERVAL milliseconds.
     # It handles the timing of various events in the game, such as:
     # pooping, feeding, jumping, and sleeping.
@@ -296,6 +300,15 @@ def on_forever():
             timer(500, "clean_poop")
     elif input.logo_is_pressed():
         jump()
+    elif input.is_gesture(Gesture.SHAKE):
+        if sound_increase:
+            music.set_volume(music.volume() + 1)
+            if music.volume() == 255:
+                sound_increase = False
+        else:
+            music.set_volume(music.volume() - 1)
+            if music.volume() == 0:
+                sound_increase = True
     if hunger < 75 + CURIOSITY / 10:
         eat()
     timer(5000, "score")
