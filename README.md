@@ -116,5 +116,4 @@ interactive system using:
 
 ## License
 
-No license has been specified yet. Add a license before allowing others
-to reuse, modify, or redistribute this project.
+This project goes under BSL-1.0 licence
